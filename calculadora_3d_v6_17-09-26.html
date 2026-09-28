@@ -963,19 +963,20 @@ button,
 
                 <div class="input-grid">
                     <div class="form-group">
-                        <label>Quantidade</label>
+                        <label>Quantidade de Unidades no Lote</label>
                         <input type="number" id="quantidade" placeholder="Ex: 1" min="1" value="1">
                     </div>
                     <div class="form-group">
-                        <label>Tempo de Impressão</label>
+                        <label>Tempo de Impressão do Lote</label>
                         <div class="time-inputs">
                             <input type="number" id="tempoHoras" placeholder="Horas" min="0">
                             <input type="number" id="tempoMinutos" placeholder="Minutos" min="0" max="59">
                         </div>
                         <div class="hint-text" id="lblTempoTotal">Total: 0.00 horas</div>
+                        <div class="hint-text">O peso e o tempo informados são do lote inteiro; o custo unitário é dividido pela quantidade.</div>
                     </div>
                     <div class="form-group">
-                        <label>Peso Estimado (g)</label>
+                        <label>Peso Estimado do Lote (g)</label>
                         <input type="number" id="peso" placeholder="Ex: 25" min="0">
                     </div>
                 </div>
@@ -1071,7 +1072,7 @@ button,
 
                 <div class="input-grid" id="grupoPrecoFixo" style="display: none;">
                     <div class="form-group">
-                        <label>Preço de Venda Consumidor Desejado (R$)</label>
+                        <label>Preço de Venda Consumidor Desejado por Unidade (R$)</label>
                         <input type="number" id="precoDesejadoConsumidor" placeholder="Ex: 120.00" min="0" step="0.01">
                     </div>
                 </div>
@@ -1117,6 +1118,10 @@ button,
                 <div class="main-result" id="outCustoTotal">R$ 0,00</div>
                 
                 <div class="detalhes-wrapper" id="detalhesCusto">
+                    <div class="breakdown-item" style="border-color: #3B82F6;">
+                        <div class="breakdown-label">Quantidade</div>
+                        <div class="breakdown-value" id="outQuantidadeCusto">1 un.</div>
+                    </div>
                     <div class="breakdown-item">
                         <div class="breakdown-label">Filamento</div>
                         <div class="breakdown-value" id="outFilamento">R$ 0,00</div>
@@ -1142,7 +1147,7 @@ button,
                         <div class="breakdown-value" id="outFalhas">R$ 0,00</div>
                     </div>
                     <div class="breakdown-item" style="border-color: #374151;">
-                        <div class="breakdown-label">Total de Custos</div>
+                        <div class="breakdown-label">Custo Total do Lote</div>
                         <div class="breakdown-value" id="outTotalCustosRodape">R$ 0,00</div>
                     </div>
                 </div>
@@ -1155,8 +1160,12 @@ button,
 
                 <div class="detalhes-wrapper" id="detalhesConsumidor">
                     <div class="breakdown-item">
-                        <div class="breakdown-label">Preço Consumidor Final</div>
+                        <div class="breakdown-label">Preço por Unidade</div>
                         <div class="breakdown-value" id="outPrecoFinalConsumidor">R$ 0,00</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-label">Preço Total do Pedido</div>
+                        <div class="breakdown-value" id="outPrecoTotalConsumidor">R$ 0,00</div>
                     </div>
                     <div class="breakdown-item">
                         <div class="breakdown-label">Lucro Bruto</div>
@@ -1176,8 +1185,12 @@ button,
 
                 <div class="detalhes-wrapper" id="detalhesLojista">
                     <div class="breakdown-item">
-                        <div class="breakdown-label">Preço para Lojista</div>
+                        <div class="breakdown-label">Preço por Unidade</div>
                         <div class="breakdown-value" id="outPrecoFinalLojista">R$ 0,00</div>
+                    </div>
+                    <div class="breakdown-item">
+                        <div class="breakdown-label">Preço Total do Pedido</div>
+                        <div class="breakdown-value" id="outPrecoTotalLojista">R$ 0,00</div>
                     </div>
                     <div class="breakdown-item">
                         <div class="breakdown-label">Lucro Bruto Lojista</div>
@@ -1214,14 +1227,15 @@ button,
                             <th>Modo Preço</th>
                             <th>Peso</th>
                             <th>Tempo</th>
+                            <th>Custo Unitário</th>
                             <th>Custo Total</th>
-                            <th>Preço Consumidor</th>
+                            <th>Preço Consumidor / Un.</th>
                             <th>Preço Lojista</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="corpoHistorico">
-                        <tr><td colspan="8" class="empty-history">Nenhum orçamento salvo ainda.</td></tr>
+                        <tr><td colspan="9" class="empty-history">Nenhum orçamento salvo ainda.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1371,15 +1385,16 @@ button,
         let listaOrcamentos = [];
 
         function calcular() {
+            const quantidade = Math.max(1, Math.floor(getVal('quantidade') || 1));
             const tempoHoras = getVal('tempoHoras');
             const tempoMinutos = getVal('tempoMinutos');
             const tempoTotalHoras = tempoHoras + (tempoMinutos / 60);
-            
+
             document.getElementById('lblTempoTotal').innerText = `Total: ${tempoTotalHoras.toFixed(2)} horas`;
 
             const peso = getVal('peso');
             const custoFilamento = getVal('custoFilamento');
-            
+
             const selectImp = document.getElementById('impressora');
             const potencia = parseFloat(selectImp.value) || 0;
             const nomeImpressora = selectImp.options[selectImp.selectedIndex].getAttribute('data-nome');
@@ -1390,52 +1405,83 @@ button,
             const valorImpressora = getVal('valorImpressora');
             const vidaUtil = getVal('vidaUtil');
             const falhasPerc = getVal('falhasPerc');
-            
+
             const totalAcessorios = getTotalAcessorios();
             const acessoriosTexto = getAcessoriosStr();
-            
+
             const modoPreco = document.getElementById('modoPreco').value;
             const markup = getVal('markupConsumidor') || 1;
             const precoDesejado = getVal('precoDesejadoConsumidor');
-            
+
             const modoLojista = document.getElementById('modoLojista').value;
             const imposto = getVal('imposto');
             const taxaPagamento = getVal('taxaPagamento');
             const incluirImpostosBool = document.getElementById('incluirImpostos').checked;
 
-            // Custos
-            const valFilamento = (peso / 1000) * custoFilamento;
-            const valEnergia = tempoTotalHoras * (potencia / 1000) * custoKwh;
-            const valFixo = unidadesMes > 0 ? (custoFixoMes / unidadesMes) : 0;
-            const valAmortizacao = vidaUtil > 0 ? (valorImpressora / vidaUtil) * tempoTotalHoras : 0;
-            const valFalhas = (valFilamento + valEnergia) * (falhasPerc / 100);
-            
-            const totalCusto = valFilamento + valEnergia + totalAcessorios + valFixo + valAmortizacao + valFalhas;
+            // =========================================================
+            // CUSTOS DO LOTE
+            // Peso, tempo e acessórios representam o lote informado.
+            // O custo unitário é SEMPRE o custo total dividido pela quantidade.
+            // =========================================================
+            const valFilamentoTotal = (peso / 1000) * custoFilamento;
+            const valEnergiaTotal = tempoTotalHoras * (potencia / 1000) * custoKwh;
+            const valFixoTotal = unidadesMes > 0 ? (custoFixoMes / unidadesMes) : 0;
+            const valAmortizacaoTotal = vidaUtil > 0 ? (valorImpressora / vidaUtil) * tempoTotalHoras : 0;
+            const valFalhasTotal = (valFilamentoTotal + valEnergiaTotal) * (falhasPerc / 100);
 
-            // UI Custos
-            document.getElementById('outCustoTotal').innerText = formatBRL(totalCusto);
+            const totalCusto =
+                valFilamentoTotal +
+                valEnergiaTotal +
+                totalAcessorios +
+                valFixoTotal +
+                valAmortizacaoTotal +
+                valFalhasTotal;
+
+            // =========================================================
+            // CUSTOS UNITÁRIOS
+            // =========================================================
+            const custoUnitario = totalCusto / quantidade;
+            const valFilamentoUnit = valFilamentoTotal / quantidade;
+            const valEnergiaUnit = valEnergiaTotal / quantidade;
+            const valAcessoriosUnit = totalAcessorios / quantidade;
+            const valFixoUnit = valFixoTotal / quantidade;
+            const valAmortizacaoUnit = valAmortizacaoTotal / quantidade;
+            const valFalhasUnit = valFalhasTotal / quantidade;
+
+            // UI Custos: detalhamento = unitário; rodapé = total do lote.
+            document.getElementById('outCustoTotal').innerText = formatBRL(custoUnitario);
+            document.getElementById('outQuantidadeCusto').innerText = `${quantidade} un.`;
             document.getElementById('outTotalCustosRodape').innerText = formatBRL(totalCusto);
-            document.getElementById('outFilamento').innerText = formatBRL(valFilamento);
-            document.getElementById('outEnergia').innerText = formatBRL(valEnergia);
-            document.getElementById('outAcessorios').innerText = formatBRL(totalAcessorios);
-            document.getElementById('outCustoFixo').innerText = formatBRL(valFixo);
-            document.getElementById('outAmortizacao').innerText = formatBRL(valAmortizacao);
-            document.getElementById('outFalhas').innerText = formatBRL(valFalhas);
+            document.getElementById('outFilamento').innerText = formatBRL(valFilamentoUnit);
+            document.getElementById('outEnergia').innerText = formatBRL(valEnergiaUnit);
+            document.getElementById('outAcessorios').innerText = formatBRL(valAcessoriosUnit);
+            document.getElementById('outCustoFixo').innerText = formatBRL(valFixoUnit);
+            document.getElementById('outAmortizacao').innerText = formatBRL(valAmortizacaoUnit);
+            document.getElementById('outFalhas').innerText = formatBRL(valFalhasUnit);
 
-            // Preço Consumidor
+            // =========================================================
+            // PREÇO AO CONSUMIDOR (UNITÁRIO + TOTAL DO PEDIDO)
+            // =========================================================
             const totalTaxas = (imposto / 100) + (taxaPagamento / 100);
             let precoConsumidor = 0;
 
             if (modoPreco === 'markup') {
-                precoConsumidor = totalCusto * markup;
+                precoConsumidor = custoUnitario * markup;
                 if (incluirImpostosBool && totalTaxas < 1) {
                     precoConsumidor = precoConsumidor / (1 - totalTaxas);
                 }
             } else {
+                // Preço informado é interpretado como preço POR UNIDADE.
                 precoConsumidor = precoDesejado;
             }
 
-            // Preço Lojista baseado na seleção
+            const precoConsumidorTotal = precoConsumidor * quantidade;
+            const brutoConsumidor = precoConsumidor - custoUnitario;
+            const liqConsumidor = brutoConsumidor - (precoConsumidor * totalTaxas);
+
+            // =========================================================
+            // PREÇO LOJISTA (UNITÁRIO + TOTAL DO PEDIDO)
+            // =========================================================
             let precoLojista = 0;
             if (modoLojista === 'metade') {
                 precoLojista = precoConsumidor * 0.5;
@@ -1449,32 +1495,32 @@ button,
                 precoLojista = precoConsumidor * 0.5;
             }
 
-            const brutoConsumidor = precoConsumidor - totalCusto;
-            const liqConsumidor = brutoConsumidor - (precoConsumidor * totalTaxas);
-
-            const brutoLojista = precoLojista - totalCusto;
+            const precoLojistaTotal = precoLojista * quantidade;
+            const brutoLojista = precoLojista - custoUnitario;
             const liqLojista = brutoLojista - (precoLojista * totalTaxas);
 
-            // UI Preços
+            // UI Preços: destaque = preço unitário; detalhamento também mostra o total do pedido.
             document.getElementById('outPrecoConsumidor').innerText = formatBRL(precoConsumidor);
             document.getElementById('outPrecoFinalConsumidor').innerText = formatBRL(precoConsumidor);
+            document.getElementById('outPrecoTotalConsumidor').innerText = formatBRL(precoConsumidorTotal);
             document.getElementById('outLucroBrutoConsumidor').innerText = formatBRL(brutoConsumidor);
             document.getElementById('outLucroLiquidoConsumidor').innerText = formatBRL(liqConsumidor);
 
             document.getElementById('outPrecoLojista').innerText = formatBRL(precoLojista);
             document.getElementById('outPrecoFinalLojista').innerText = formatBRL(precoLojista);
+            document.getElementById('outPrecoTotalLojista').innerText = formatBRL(precoLojistaTotal);
             document.getElementById('outLucroBrutoLojista').innerText = formatBRL(brutoLojista);
             document.getElementById('outLucroLiquidoLojista').innerText = formatBRL(liqLojista);
 
-            // Objeto de dados formatado para o Excel
+            // Objeto de dados formatado para o Excel / histórico.
             calculoAtual = {
                 "Nome do Produto": document.getElementById('nomeStl').value || "Não informado",
                 "Modo de Precificação": modoPreco === 'markup' ? "Markup" : "Preço Informado",
-                "Markup / Preço Alvo": modoPreco === 'markup' ? markup : precoDesejado,
+                "Markup / Preço Alvo (un.)": modoPreco === 'markup' ? markup : precoDesejado,
                 "Relação Lojista": modoLojista,
-                "Quantidade": getVal('quantidade') || 1,
-                "Peso (g)": peso,
-                "Tempo de Impressão (h)": parseFloat(tempoTotalHoras.toFixed(2)),
+                "Quantidade": quantidade,
+                "Peso do Lote (g)": peso,
+                "Tempo do Lote (h)": parseFloat(tempoTotalHoras.toFixed(2)),
                 "Custo do Kg Filamento (R$)": custoFilamento,
                 "Nome da Impressora": nomeImpressora,
                 "Custo por KWh (R$)": custoKwh,
@@ -1484,26 +1530,35 @@ button,
                 "Vida Útil (h)": vidaUtil,
                 "Percentual de Falha (%)": falhasPerc,
                 "Acessórios": acessoriosTexto !== null ? acessoriosTexto : "Nenhum",
-                "Markup": modoPreco === 'markup' ? markup : "N/A",
                 "Imposto (%)": imposto,
                 "Taxa de Pagamento (%)": taxaPagamento,
                 "Incluir Impostos no Preço": incluirImpostosBool ? "Sim" : "Não",
-                
-                "Custo Unitário - Filamento": valFilamento,
-                "Custo Unitário - Energia": valEnergia,
-                "Custo Unitário - Acessórios": totalAcessorios,
-                "Custo Unitário - Fixo": valFixo,
-                "Custo Unitário - Amortização": valAmortizacao,
-                "Custo Unitário - Falhas": valFalhas,
-                "Custo Unitário - Total": totalCusto,
 
-                "Preço Consumidor - Final": precoConsumidor,
-                "Preço Consumidor - Lucro Bruto": brutoConsumidor,
-                "Preço Consumidor - Lucro Líquido": liqConsumidor,
+                "Custo Total - Filamento": valFilamentoTotal,
+                "Custo Total - Energia": valEnergiaTotal,
+                "Custo Total - Acessórios": totalAcessorios,
+                "Custo Total - Fixo": valFixoTotal,
+                "Custo Total - Amortização": valAmortizacaoTotal,
+                "Custo Total - Falhas": valFalhasTotal,
+                "Custo Total do Lote": totalCusto,
 
-                "Preço Lojista - Final": precoLojista,
-                "Preço Lojista - Lucro Bruto": brutoLojista,
-                "Preço Lojista - Lucro Líquido": liqLojista
+                "Custo Unitário - Filamento": valFilamentoUnit,
+                "Custo Unitário - Energia": valEnergiaUnit,
+                "Custo Unitário - Acessórios": valAcessoriosUnit,
+                "Custo Unitário - Fixo": valFixoUnit,
+                "Custo Unitário - Amortização": valAmortizacaoUnit,
+                "Custo Unitário - Falhas": valFalhasUnit,
+                "Custo Unitário - Total": custoUnitario,
+
+                "Preço Consumidor - Unitário": precoConsumidor,
+                "Preço Consumidor - Total do Pedido": precoConsumidorTotal,
+                "Preço Consumidor - Lucro Bruto (un.)": brutoConsumidor,
+                "Preço Consumidor - Lucro Líquido (un.)": liqConsumidor,
+
+                "Preço Lojista - Unitário": precoLojista,
+                "Preço Lojista - Total do Pedido": precoLojistaTotal,
+                "Preço Lojista - Lucro Bruto (un.)": brutoLojista,
+                "Preço Lojista - Lucro Líquido (un.)": liqLojista
             };
         }
 
@@ -1522,7 +1577,7 @@ button,
             document.getElementById('contadorItens').innerText = listaOrcamentos.length;
             
             if (listaOrcamentos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="empty-history">Nenhum orçamento salvo ainda.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="empty-history">Nenhum orçamento salvo ainda.</td></tr>`;
                 return;
             }
 
@@ -1532,11 +1587,12 @@ button,
                 tr.innerHTML = `
                     <td class="highlight">${item["Nome do Produto"]}</td>
                     <td>${item["Modo de Precificação"]}</td>
-                    <td>${item["Peso (g)"]}g</td>
-                    <td>${item["Tempo de Impressão (h)"]}h</td>
+                    <td>${item["Peso do Lote (g)"]}g</td>
+                    <td>${item["Tempo do Lote (h)"]}h</td>
                     <td>${formatBRL(item["Custo Unitário - Total"])}</td>
-                    <td style="color: var(--accent-purple); font-weight: bold;">${formatBRL(item["Preço Consumidor - Final"])}</td>
-                    <td style="color: var(--accent-blue); font-weight: bold;">${formatBRL(item["Preço Lojista - Final"])}</td>
+                    <td>${formatBRL(item["Custo Total do Lote"])}</td>
+                    <td style="color: var(--accent-purple); font-weight: bold;">${formatBRL(item["Preço Consumidor - Unitário"])}</td>
+                    <td style="color: var(--accent-blue); font-weight: bold;">${formatBRL(item["Preço Lojista - Unitário"])}</td>
                     <td><button class="btn-del-row" onclick="removerItemHistorico(${index})" title="Remover">🗑️</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -1564,12 +1620,14 @@ button,
             const tempoM = getVal('tempoMinutos') || 0;
             const acessorios = getAcessoriosStr() || "Nenhum";
             
-            // Pega o valor consumidor atual calculado
-            const precoConsumidorTxt = document.getElementById('outPrecoConsumidor').innerText;
+            // O PDF representa o valor total do pedido (quantidade x preço unitário).
+            const precoConsumidorTxt = calculoAtual["Preço Consumidor - Total do Pedido"] !== undefined
+                ? formatBRL(calculoAtual["Preço Consumidor - Total do Pedido"])
+                : document.getElementById('outPrecoConsumidor').innerText;
 
             document.getElementById('pdfNomeProduto').innerText = nomeProd;
             document.getElementById('pdfQtd').innerText = quantidade;
-            document.getElementById('pdfPeso').innerText = peso + "g";
+            document.getElementById('pdfPeso').innerText = peso + "g (lote)";
             document.getElementById('pdfTempo').innerText = `${tempoH}h ${tempoM}min`;
             document.getElementById('pdfAcessorios').innerText = acessorios;
             document.getElementById('pdfValorTotal').innerText = precoConsumidorTxt;
@@ -1594,7 +1652,33 @@ button,
             html2pdf().from(elementoPdf).set(opt).save();
         }
 
-        document.querySelector('.inputs-section').addEventListener('input', calcular);
+        // Eventos centralizados: mais estáveis em Chrome/Android e Safari/iOS.
+        // requestAnimationFrame evita recalcular dezenas de vezes durante a digitação rápida.
+        let calculoAgendado = false;
+        function agendarCalculo() {
+            if (calculoAgendado) return;
+            calculoAgendado = true;
+            requestAnimationFrame(() => {
+                calculoAgendado = false;
+                calcular();
+            });
+        }
+
+        const inputsSection = document.querySelector('.inputs-section');
+        inputsSection.addEventListener('input', agendarCalculo, { passive: true });
+        inputsSection.addEventListener('change', agendarCalculo, { passive: true });
+
+        // Recalcula ao voltar do segundo plano / histórico do navegador mobile (bfcache).
+        window.addEventListener('pageshow', agendarCalculo, { passive: true });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) agendarCalculo();
+        }, { passive: true });
+
+        // Compatibilidade com navegadores mais antigos que não expõem requestAnimationFrame.
+        if (!window.requestAnimationFrame) {
+            window.requestAnimationFrame = (callback) => setTimeout(callback, 0);
+        }
+
         calcular();
     </script>
 </body>
