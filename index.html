@@ -229,6 +229,77 @@
             width: 100%;
         }
 
+        .final-summary {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(139, 92, 246, 0.14));
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-top: 10px;
+        }
+
+        .summary-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-white);
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .summary-grid.two-cols {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .cost-breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .summary-item {
+            background: rgba(17, 24, 39, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .summary-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+
+        .summary-value {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text-white);
+            line-height: 1.2;
+        }
+
+        .summary-subvalue {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .summary-subvalue strong {
+            color: var(--text-white);
+        }
+
+        .summary-item.accent .summary-value {
+            color: #7dd3fc;
+        }
+
         .breakdown-item {
             background-color: transparent;
             border: 1px solid #1F2937;
@@ -339,7 +410,14 @@
 
         /* ESTILOS DO ORÇAMENTO PDF CLIENTE (INVISÍVEL NA TELA NORMAL) */
         #pdfPreviewContainer {
-            display: none;
+            position: fixed;
+            left: -9999px;
+            top: -9999px;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .pdf-page {
@@ -504,6 +582,9 @@
             }
             .main-result {
                 font-size: 28px;
+            }
+            .summary-grid {
+                grid-template-columns: 1fr;
             }
         }
     
@@ -1109,86 +1190,51 @@ button,
 
         </div>
 
-        <!-- ÁREA DE RESULTADOS -->
-        <div class="outputs-section">
-            
-            <div class="result-column">
-                <div class="result-header">Custo Unitário</div>
-                <div class="main-result" id="outCustoTotal">R$ 0,00</div>
-                
-                <div class="detalhes-wrapper" id="detalhesCusto">
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Filamento (por unidade)</div>
-                        <div class="breakdown-value" id="outFilamento">R$ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Energia (por unidade)</div>
-                        <div class="breakdown-value" id="outEnergia">R$ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Acessórios e Embalagem (por unidade)</div>
-                        <div class="breakdown-value" id="outAcessorios">R$ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Custo Fixo (por unidade)</div>
-                        <div class="breakdown-value" id="outCustoFixo">R$ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Amortização (por unidade)</div>
-                        <div class="breakdown-value" id="outAmortizacao">R$ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Falhas (por unidade)</div>
-                        <div class="breakdown-value" id="outFalhas">R$ 0,00</div>
-                    </div>
-                    <div class="breakdown-item" style="border-color: #374151;">
-                        <div class="breakdown-label">Total de Custos do Pedido</div>
-                        <div class="breakdown-value" id="outTotalCustosRodape">R$ 0,00</div>
-                    </div>
+        <div class="final-summary" style="margin-top: 20px;">
+            <div class="summary-header">💸 Custos e preços do produto</div>
+
+            <div class="summary-grid" style="margin-bottom: 12px;">
+                <div class="summary-item accent">
+                    <div class="summary-label">Custos</div>
+                    <div class="summary-value" id="outResumoCustoUnitarioPedido">R$ 0,00</div>
+                    <div class="summary-subvalue"><strong>Qtd.</strong> <span id="outResumoQuantidadeTotal">1</span></div>
+                    <div class="summary-subvalue"><strong>Unit.</strong> <span id="outResumoCustoUnitario">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Total</strong> <span id="outResumoCustoTotalPedido">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Filamento</strong> <span id="outResumoFilamentoUnit">R$ 0,00</span> / <span id="outResumoFilamentoTotal">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Energia</strong> <span id="outResumoEnergiaUnit">R$ 0,00</span> / <span id="outResumoEnergiaTotal">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Acessórios</strong> <span id="outResumoAcessoriosUnit">R$ 0,00</span> / <span id="outResumoAcessoriosTotal">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Fixo</strong> <span id="outResumoCustoFixoUnit">R$ 0,00</span> / <span id="outResumoCustoFixoTotal">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Amortização</strong> <span id="outResumoAmortizacaoUnit">R$ 0,00</span> / <span id="outResumoAmortizacaoTotal">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Falhas</strong> <span id="outResumoFalhasUnit">R$ 0,00</span> / <span id="outResumoFalhasTotal">R$ 0,00</span></div>
                 </div>
-                <button class="btn-toggle-detalhes" onclick="toggleDetalhes('detalhesCusto', this)">Ocultar detalhamento ^</button>
-            </div>
 
-            <div class="result-column">
-                <div class="result-header purple">👤 Preço para Consumidor</div>
-                <div class="main-result" id="outPrecoConsumidor">R$ 0,00</div>
-
-                <div class="detalhes-wrapper" id="detalhesConsumidor">
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Preço Consumidor Final</div>
-                        <div class="breakdown-value" id="outPrecoFinalConsumidor">R$ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Lucro Bruto</div>
-                        <div class="breakdown-value" id="outLucroBrutoConsumidor">R$ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Lucro Líquido</div>
-                        <div class="breakdown-value" id="outLucroLiquidoConsumidor">R$ 0,00</div>
-                    </div>
+                <div class="summary-item accent">
+                    <div class="summary-label">Preço consumidor</div>
+                    <div class="summary-value" id="outResumoConsumidorPreco">R$ 0,00</div>
+                    <div class="summary-subvalue"><strong>Unit.</strong> <span id="outResumoConsumidorVendaUnit">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Total</strong> <span id="outResumoConsumidorVendaTotal">R$ 0,00</span></div>
                 </div>
-                <button class="btn-toggle-detalhes" onclick="toggleDetalhes('detalhesConsumidor', this)">Ocultar detalhamento ^</button>
-            </div>
 
-            <div class="result-column">
-                <div class="result-header blue">🏢 Preço para Lojista</div>
-                <div class="main-result" id="outPrecoLojista">R$ 0,00</div>
-
-                <div class="detalhes-wrapper" id="detalhesLojista">
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Preço para Lojista</div>
-                        <div class="breakdown-value" id="outPrecoFinalLojista">R$ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Lucro Bruto Lojista</div>
-                        <div class="breakdown-value" id="outLucroBrutoLojista">R$ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Lucro Líquido Lojista</div>
-                        <div class="breakdown-value" id="outLucroLiquidoLojista">R$ 0,00</div>
-                    </div>
+                <div class="summary-item">
+                    <div class="summary-label">Margem consumidor</div>
+                    <div class="summary-value" id="outResumoConsumidorMargemPerc">0,00%</div>
+                    <div class="summary-subvalue"><strong>Unit.</strong> <span id="outResumoConsumidorMargemUnit">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Total</strong> <span id="outResumoConsumidorMargemReal">R$ 0,00</span></div>
                 </div>
-                <button class="btn-toggle-detalhes" onclick="toggleDetalhes('detalhesLojista', this)">Ocultar detalhamento ^</button>
+
+                <div class="summary-item accent">
+                    <div class="summary-label">Preço lojista</div>
+                    <div class="summary-value" id="outResumoLojistaPreco">R$ 0,00</div>
+                    <div class="summary-subvalue"><strong>Unit.</strong> <span id="outResumoLojistaVendaUnit">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Total</strong> <span id="outResumoLojistaVendaTotal">R$ 0,00</span></div>
+                </div>
+
+                <div class="summary-item">
+                    <div class="summary-label">Margem lojista</div>
+                    <div class="summary-value" id="outResumoLojistaMargemPerc">0,00%</div>
+                    <div class="summary-subvalue"><strong>Unit.</strong> <span id="outResumoLojistaMargemUnit">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Total</strong> <span id="outResumoLojistaMargemReal">R$ 0,00</span></div>
+                </div>
             </div>
 
         </div>
@@ -1197,9 +1243,6 @@ button,
         <div class="action-bar">
             <button class="btn-action btn-save" onclick="salvarOrcamento()">
                 💾 Salvar Orçamento na Lista
-            </button>
-            <button class="btn-action btn-pdf" onclick="gerarPdfClienteAtual()">
-                📄 Exportar PDF Versão Cliente
             </button>
         </div>
 
@@ -1235,53 +1278,20 @@ button,
 
     </div>
 
-    <!-- TEMPLATE OCULTO PARA GERAR PDF DO CLIENTE -->
-    <div id="pdfPreviewContainer">
-        <div class="pdf-page" id="pdfConteudoRender">
-            <div class="pdf-header">
-                <div class="pdf-logo-title">
-                    <div id="pdfImagemBox" class="pdf-img-preview">Sem Imagem</div>
-                    <div>
-                        <div class="pdf-title" id="pdfNomeProduto">Orçamento de Impressão 3D</div>
-                        <div class="pdf-subtitle">Proposta Comercial e Especificações do Produto</div>
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <div style="font-size: 14px; font-weight: bold; color: #374151;" id="pdfDataEmissao">Data: --/--/----</div>
-                    <div style="font-size: 12px; color: #6b7280;">Validade: 15 dias</div>
-                </div>
-            </div>
-
-            <div class="pdf-content-grid">
-                <div class="pdf-box">
-                    <div class="pdf-box-title">📋 Detalhes do Produto</div>
-                    <div class="pdf-row"><span>Quantidade:</span> <span id="pdfQtd">1</span></div>
-                    <div class="pdf-row"><span>Peso Estimado:</span> <span id="pdfPeso">0g</span></div>
-                    <div class="pdf-row"><span>Tempo de Impressão:</span> <span id="pdfTempo">0h</span></div>
-                    <div class="pdf-row"><span>Tecnologia:</span> <span>Impressão 3D FDM</span></div>
-                </div>
-                <div class="pdf-box">
-                    <div class="pdf-box-title">📦 Componentes & Acabamento</div>
-                    <div class="pdf-row"><span>Material Principal:</span> <span>Filamento Premium</span></div>
-                    <div class="pdf-row"><span>Acessórios Inclusos:</span> <span id="pdfAcessorios">Nenhum</span></div>
-                    <div class="pdf-row"><span>Acabamento:</span> <span>Padrão de Qualidade 3D</span></div>
-                </div>
-            </div>
-
-            <div class="pdf-total-box">
-                <div class="pdf-total-label">VALOR TOTAL DO INVESTIMENTO</div>
-                <div class="pdf-total-value" id="pdfValorTotal">R$ 0,00</div>
-            </div>
-
-            <div class="pdf-footer">
-                Documento gerado automaticamente por Calculadora 3D Profissional • Obrigado pela preferência!
-            </div>
-        </div>
-    </div>
-
     <script>
         const formatBRL = (value) => {
-            return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        };
+
+        const formatPercent = (value) => {
+            return `${(Number(value || 0)).toFixed(2).replace('.', ',')}%`;
+        };
+
+        const safeSetText = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerText = value;
+            }
         };
 
         const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
@@ -1426,27 +1436,29 @@ button,
             const valFalhasUnit = valFalhas / quantidade;
 
             // UI Custos — o destaque é SEMPRE o custo por peça
-            document.getElementById('outCustoTotal').innerText = formatBRL(custoUnitario);
-            document.getElementById('outTotalCustosRodape').innerText = formatBRL(totalCusto);
-            document.getElementById('outFilamento').innerText = formatBRL(valFilamentoUnit);
-            document.getElementById('outEnergia').innerText = formatBRL(valEnergiaUnit);
-            document.getElementById('outAcessorios').innerText = formatBRL(valAcessoriosUnit);
-            document.getElementById('outCustoFixo').innerText = formatBRL(valFixoUnit);
-            document.getElementById('outAmortizacao').innerText = formatBRL(valAmortizacaoUnit);
-            document.getElementById('outFalhas').innerText = formatBRL(valFalhasUnit);
+            safeSetText('outCustoTotal', formatBRL(custoUnitario));
+            safeSetText('outTotalCustosRodape', formatBRL(totalCusto));
+            safeSetText('outFilamento', formatBRL(valFilamentoUnit));
+            safeSetText('outEnergia', formatBRL(valEnergiaUnit));
+            safeSetText('outAcessorios', formatBRL(valAcessoriosUnit));
+            safeSetText('outCustoFixo', formatBRL(valFixoUnit));
+            safeSetText('outAmortizacao', formatBRL(valAmortizacaoUnit));
+            safeSetText('outFalhas', formatBRL(valFalhasUnit));
 
             // Preço Consumidor
             const totalTaxas = (imposto / 100) + (taxaPagamento / 100);
             let precoConsumidor = 0;
 
             if (modoPreco === 'markup') {
-                precoConsumidor = totalCusto * markup;
+                precoConsumidor = custoUnitario * markup;
                 if (incluirImpostosBool && totalTaxas < 1) {
                     precoConsumidor = precoConsumidor / (1 - totalTaxas);
                 }
             } else {
                 precoConsumidor = precoDesejado;
             }
+
+            const precoConsumidorTotal = precoConsumidor * quantidade;
 
             // Preço Lojista baseado na seleção
             let precoLojista = 0;
@@ -1462,22 +1474,77 @@ button,
                 precoLojista = precoConsumidor * 0.5;
             }
 
-            const brutoConsumidor = precoConsumidor - totalCusto;
+            const precoLojistaTotal = precoLojista * quantidade;
+
+            const brutoConsumidor = precoConsumidor - custoUnitario;
+            const brutoConsumidorTotal = precoConsumidorTotal - totalCusto;
             const liqConsumidor = brutoConsumidor - (precoConsumidor * totalTaxas);
+            const liqConsumidorTotal = brutoConsumidorTotal - (precoConsumidorTotal * totalTaxas);
+            const margemBrutaConsumidor = precoConsumidor > 0 ? ((brutoConsumidor / precoConsumidor) * 100) : 0;
+            const margemLiquidaConsumidor = precoConsumidor > 0 ? ((liqConsumidor / precoConsumidor) * 100) : 0;
 
-            const brutoLojista = precoLojista - totalCusto;
+            const brutoLojista = precoLojista - custoUnitario;
+            const brutoLojistaTotal = precoLojistaTotal - totalCusto;
             const liqLojista = brutoLojista - (precoLojista * totalTaxas);
+            const liqLojistaTotal = brutoLojistaTotal - (precoLojistaTotal * totalTaxas);
+            const margemBrutaLojista = precoLojista > 0 ? ((brutoLojista / precoLojista) * 100) : 0;
 
-            // UI Preços
-            document.getElementById('outPrecoConsumidor').innerText = formatBRL(precoConsumidor);
-            document.getElementById('outPrecoFinalConsumidor').innerText = formatBRL(precoConsumidor);
-            document.getElementById('outLucroBrutoConsumidor').innerText = formatBRL(brutoConsumidor);
-            document.getElementById('outLucroLiquidoConsumidor').innerText = formatBRL(liqConsumidor);
+            const legacyIdMap = {
+                outPrecoConsumidor: formatBRL(precoConsumidor),
+                outPrecoFinalConsumidor: formatBRL(precoConsumidor),
+                outLucroBrutoConsumidor: formatBRL(brutoConsumidor),
+                outLucroLiquidoConsumidor: formatBRL(liqConsumidor),
+                outPrecoLojista: formatBRL(precoLojista),
+                outPrecoFinalLojista: formatBRL(precoLojista),
+                outLucroBrutoLojista: formatBRL(brutoLojista),
+                outLucroLiquidoLojista: formatBRL(liqLojista),
+                outCustoTotal: formatBRL(custoUnitario),
+                outTotalCustosRodape: formatBRL(totalCusto),
+                outFilamento: formatBRL(valFilamentoUnit),
+                outEnergia: formatBRL(valEnergiaUnit),
+                outAcessorios: formatBRL(valAcessoriosUnit),
+                outCustoFixo: formatBRL(valFixoUnit),
+                outAmortizacao: formatBRL(valAmortizacaoUnit),
+                outFalhas: formatBRL(valFalhasUnit)
+            };
 
-            document.getElementById('outPrecoLojista').innerText = formatBRL(precoLojista);
-            document.getElementById('outPrecoFinalLojista').innerText = formatBRL(precoLojista);
-            document.getElementById('outLucroBrutoLojista').innerText = formatBRL(brutoLojista);
-            document.getElementById('outLucroLiquidoLojista').innerText = formatBRL(liqLojista);
+            Object.entries(legacyIdMap).forEach(([id, value]) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = value;
+            });
+
+            safeSetText('outResumoConsumidorPreco', formatBRL(precoConsumidor));
+            safeSetText('outResumoLojistaPreco', formatBRL(precoLojista));
+            safeSetText('outResumoConsumidorMargemReal', formatBRL(brutoConsumidorTotal));
+            safeSetText('outResumoLojistaMargemReal', formatBRL(brutoLojistaTotal));
+            safeSetText('outResumoConsumidorMargemPerc', formatPercent(margemBrutaConsumidor));
+            safeSetText('outResumoLojistaMargemPerc', formatPercent(margemBrutaLojista));
+
+            safeSetText('outResumoCustoTotalPedido', formatBRL(totalCusto));
+            safeSetText('outResumoCustoUnitarioPedido', formatBRL(custoUnitario));
+            safeSetText('outResumoCustoUnitario', formatBRL(custoUnitario));
+            safeSetText('outResumoQuantidadeTotal', Math.max(1, Math.round(quantidade)));
+            safeSetText('outResumoCustoTotalPedido2', formatBRL(totalCusto));
+            safeSetText('outResumoCustoUnitario2', formatBRL(custoUnitario));
+            safeSetText('outResumoConsumidorVendaUnit', formatBRL(precoConsumidor));
+            safeSetText('outResumoConsumidorVendaTotal', formatBRL(precoConsumidorTotal));
+            safeSetText('outResumoLojistaVendaUnit', formatBRL(precoLojista));
+            safeSetText('outResumoLojistaVendaTotal', formatBRL(precoLojistaTotal));
+            safeSetText('outResumoConsumidorMargemUnit', formatBRL(brutoConsumidor));
+            safeSetText('outResumoLojistaMargemUnit', formatBRL(brutoLojista));
+
+            safeSetText('outResumoFilamentoUnit', formatBRL(valFilamentoUnit));
+            safeSetText('outResumoFilamentoTotal', formatBRL(valFilamento));
+            safeSetText('outResumoEnergiaUnit', formatBRL(valEnergiaUnit));
+            safeSetText('outResumoEnergiaTotal', formatBRL(valEnergia));
+            safeSetText('outResumoAcessoriosUnit', formatBRL(valAcessoriosUnit));
+            safeSetText('outResumoAcessoriosTotal', formatBRL(totalAcessorios));
+            safeSetText('outResumoCustoFixoUnit', formatBRL(valFixoUnit));
+            safeSetText('outResumoCustoFixoTotal', formatBRL(valFixo));
+            safeSetText('outResumoAmortizacaoUnit', formatBRL(valAmortizacaoUnit));
+            safeSetText('outResumoAmortizacaoTotal', formatBRL(valAmortizacao));
+            safeSetText('outResumoFalhasUnit', formatBRL(valFalhasUnit));
+            safeSetText('outResumoFalhasTotal', formatBRL(valFalhas));
 
             // Objeto de dados formatado para o Excel
             calculoAtual = {
@@ -1577,43 +1644,6 @@ button,
             XLSX.writeFile(wb, `Orcamentos_Impressao3D_Avancado.xlsx`);
         }
 
-        function gerarPdfClienteAtual() {
-            const nomeProd = document.getElementById('nomeStl').value || "Produto Impresso em 3D";
-            const quantidade = getVal('quantidade') || 1;
-            const peso = getVal('peso') || 0;
-            const tempoH = getVal('tempoHoras') || 0;
-            const tempoM = getVal('tempoMinutos') || 0;
-            const acessorios = getAcessoriosStr() || "Nenhum";
-            
-            // Pega o valor consumidor atual calculado
-            const precoConsumidorTxt = document.getElementById('outPrecoConsumidor').innerText;
-
-            document.getElementById('pdfNomeProduto').innerText = nomeProd;
-            document.getElementById('pdfQtd').innerText = quantidade;
-            document.getElementById('pdfPeso').innerText = peso + "g";
-            document.getElementById('pdfTempo').innerText = `${tempoH}h ${tempoM}min`;
-            document.getElementById('pdfAcessorios').innerText = acessorios;
-            document.getElementById('pdfValorTotal').innerText = precoConsumidorTxt;
-            document.getElementById('pdfDataEmissao').innerText = "Data: " + new Date().toLocaleDateString('pt-BR');
-
-            const boxImg = document.getElementById('pdfImagemBox');
-            if (imagemBase64Data) {
-                boxImg.innerHTML = `<img src="${imagemBase64Data}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 7px;">`;
-            } else {
-                boxImg.innerHTML = `Sem Imagem`;
-            }
-
-            const elementoPdf = document.getElementById('pdfConteudoRender');
-            const opt = {
-                margin:       0,
-                filename:     `Orcamento_${nomeProd.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().from(elementoPdf).set(opt).save();
-        }
 
         document.querySelector('.inputs-section').addEventListener('input', calcular);
         calcular();
