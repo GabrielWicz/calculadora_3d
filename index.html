@@ -1217,9 +1217,12 @@ button,
 
                 <div class="summary-item">
                     <div class="summary-label">Margem consumidor</div>
-                    <div class="summary-value" id="outResumoConsumidorMargemPerc">0,00%</div>
-                    <div class="summary-subvalue"><strong>Unit.</strong> <span id="outResumoConsumidorMargemUnit">R$ 0,00</span></div>
-                    <div class="summary-subvalue"><strong>Total</strong> <span id="outResumoConsumidorMargemReal">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Bruta</strong> <span id="outResumoConsumidorMargemPerc">0,00%</span></div>
+                    <div class="summary-subvalue"><strong>Líquida</strong> <span id="outResumoConsumidorMargemLiquidaPerc">0,00%</span></div>
+                    <div class="summary-subvalue"><strong>Bruta unit.</strong> <span id="outResumoConsumidorMargemUnit">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Bruta total</strong> <span id="outResumoConsumidorMargemReal">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Líquida unit.</strong> <span id="outResumoConsumidorMargemLiquidaUnit">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Líquida total</strong> <span id="outResumoConsumidorMargemLiquidaReal">R$ 0,00</span></div>
                 </div>
 
                 <div class="summary-item accent">
@@ -1231,9 +1234,12 @@ button,
 
                 <div class="summary-item">
                     <div class="summary-label">Margem lojista</div>
-                    <div class="summary-value" id="outResumoLojistaMargemPerc">0,00%</div>
-                    <div class="summary-subvalue"><strong>Unit.</strong> <span id="outResumoLojistaMargemUnit">R$ 0,00</span></div>
-                    <div class="summary-subvalue"><strong>Total</strong> <span id="outResumoLojistaMargemReal">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Bruta</strong> <span id="outResumoLojistaMargemPerc">0,00%</span></div>
+                    <div class="summary-subvalue"><strong>Líquida</strong> <span id="outResumoLojistaMargemLiquidaPerc">0,00%</span></div>
+                    <div class="summary-subvalue"><strong>Bruta unit.</strong> <span id="outResumoLojistaMargemUnit">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Bruta total</strong> <span id="outResumoLojistaMargemReal">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Líquida unit.</strong> <span id="outResumoLojistaMargemLiquidaUnit">R$ 0,00</span></div>
+                    <div class="summary-subvalue"><strong>Líquida total</strong> <span id="outResumoLojistaMargemLiquidaReal">R$ 0,00</span></div>
                 </div>
             </div>
 
@@ -1482,12 +1488,15 @@ button,
             const liqConsumidorTotal = brutoConsumidorTotal - (precoConsumidorTotal * totalTaxas);
             const margemBrutaConsumidor = precoConsumidor > 0 ? ((brutoConsumidor / precoConsumidor) * 100) : 0;
             const margemLiquidaConsumidor = precoConsumidor > 0 ? ((liqConsumidor / precoConsumidor) * 100) : 0;
+            const margemLiquidaConsumidorTotal = precoConsumidorTotal > 0 ? ((liqConsumidorTotal / precoConsumidorTotal) * 100) : 0;
 
             const brutoLojista = precoLojista - custoUnitario;
             const brutoLojistaTotal = precoLojistaTotal - totalCusto;
             const liqLojista = brutoLojista - (precoLojista * totalTaxas);
             const liqLojistaTotal = brutoLojistaTotal - (precoLojistaTotal * totalTaxas);
             const margemBrutaLojista = precoLojista > 0 ? ((brutoLojista / precoLojista) * 100) : 0;
+            const margemLiquidaLojista = precoLojista > 0 ? ((liqLojista / precoLojista) * 100) : 0;
+            const margemLiquidaLojistaTotal = precoLojistaTotal > 0 ? ((liqLojistaTotal / precoLojistaTotal) * 100) : 0;
 
             const legacyIdMap = {
                 outPrecoConsumidor: formatBRL(precoConsumidor),
@@ -1519,6 +1528,12 @@ button,
             safeSetText('outResumoLojistaMargemReal', formatBRL(brutoLojistaTotal));
             safeSetText('outResumoConsumidorMargemPerc', formatPercent(margemBrutaConsumidor));
             safeSetText('outResumoLojistaMargemPerc', formatPercent(margemBrutaLojista));
+            safeSetText('outResumoConsumidorMargemLiquidaPerc', formatPercent(margemLiquidaConsumidor));
+            safeSetText('outResumoLojistaMargemLiquidaPerc', formatPercent(margemLiquidaLojista));
+            safeSetText('outResumoConsumidorMargemLiquidaReal', formatBRL(liqConsumidorTotal));
+            safeSetText('outResumoLojistaMargemLiquidaReal', formatBRL(liqLojistaTotal));
+            safeSetText('outResumoConsumidorMargemLiquidaUnit', formatBRL(liqConsumidor));
+            safeSetText('outResumoLojistaMargemLiquidaUnit', formatBRL(liqLojista));
 
             safeSetText('outResumoCustoTotalPedido', formatBRL(totalCusto));
             safeSetText('outResumoCustoUnitarioPedido', formatBRL(custoUnitario));
